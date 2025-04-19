@@ -1,0 +1,329 @@
+[
+  {
+    "name": "PowerShell DownloadString",
+    "conditions": {
+      "process": "powershell.exe",
+      "details_contains": "downloadstring"
+    },
+    "technique_id": "T1059.001",
+    "technique_name": "PowerShell",
+    "tactic": ["Execution"],
+    "url": "https://attack.mitre.org/techniques/T1059/001/"
+  },
+  {
+    "name": "PowerShell IEX",
+    "conditions": {
+      "process": "powershell.exe",
+      "details_contains": "iex ("
+    },
+    "technique_id": "T1059.001",
+    "technique_name": "PowerShell",
+    "tactic": ["Execution"],
+    "url": "https://attack.mitre.org/techniques/T1059/001/"
+  },
+  {
+    "name": "PowerShell Encoded Command",
+    "conditions": {
+      "process": "powershell.exe",
+      "details_contains": "-enc "
+    },
+    "technique_id": "T1027",
+    "technique_name": "Obfuscated Files or Information",
+    "tactic": ["Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1027/"
+  },
+  {
+    "name": "Network Connection via PowerShell (Sysmon)",
+    "conditions": {
+      "eventid": "3",
+      "process": "powershell.exe"
+    },
+    "technique_id": "T1105",
+    "technique_name": "Ingress Tool Transfer",
+    "tactic": ["Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1105/"
+  },
+  {
+    "name": "Scheduled Task Creation (schtasks)",
+    "conditions": {
+      "process": "schtasks.exe",
+      "details_contains": "/create"
+    },
+    "technique_id": "T1053.005",
+    "technique_name": "Scheduled Task/Job: Scheduled Task",
+    "tactic": ["Execution", "Persistence", "Privilege Escalation"],
+    "url": "https://attack.mitre.org/techniques/T1053/005/"
+  },
+    {
+      "name": "LSASS Access (Sysmon Evt 10)",
+      "conditions": {
+          "eventid": "10",
+          "details_contains": "targetimage: c:\\windows\\system32\\lsass.exe"
+      },
+      "technique_id": "T1003.001",
+      "technique_name": "OS Credential Dumping: LSASS Memory",
+      "tactic": ["Credential Access"],
+      "url": "https://attack.mitre.org/techniques/T1003/001/"
+  },
+  {
+      "name": "WMI Command Execution (wmic)",
+      "conditions": {
+          "process": "wmic.exe",
+          "details_contains": "process call create"
+      },
+      "technique_id": "T1047",
+      "technique_name": "Windows Management Instrumentation",
+      "tactic": ["Execution"],
+      "url": "https://attack.mitre.org/techniques/T1047/"
+  },
+  {
+      "name": "WMI Lateral Movement (wmic node)",
+      "conditions": {
+          "process": "wmic.exe",
+          "details_contains": "/node:"
+      },
+      "technique_id": "T1047",
+      "technique_name": "Windows Management Instrumentation",
+      "tactic": ["Lateral Movement"], 
+      "url": "https://attack.mitre.org/techniques/T1047/"
+  },
+    {
+      "name": "NTDSUtil IFM Dump",
+      "conditions": {
+          "process": "ntdsutil.exe",
+          "details_contains": "ifm"
+      },
+      "technique_id": "T1003.003",
+      "technique_name": "OS Credential Dumping: NTDS",
+      "tactic": ["Credential Access"],
+      "url": "https://attack.mitre.org/techniques/T1003/003/"
+  },
+  {
+    "name": "Rundll32 Execution",
+    "conditions": {
+      "process": "rundll32.exe"
+    },
+    "technique_id": "T1218.011",
+    "technique_name": "Signed Binary Proxy Execution: Rundll32",
+    "tactic": ["Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1218/011/"
+  },
+  {
+    "name": "Mshta Execution",
+    "conditions": {
+      "process": "mshta.exe"
+    },
+    "technique_id": "T1218.005",
+    "technique_name": "Signed Binary Proxy Execution: Mshta",
+    "tactic": ["Execution", "Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1218/005/"
+  },
+  {
+    "name": "Regsvr32 Execution",
+    "conditions": {
+      "process": "regsvr32.exe"
+    },
+    "technique_id": "T1218.010",
+    "technique_name": "Signed Binary Proxy Execution: Regsvr32",
+    "tactic": ["Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1218/010/"
+  },
+  {
+    "name": "Network Connection (Sysmon Evt 3 - Potential Exfil/C2)",
+    "conditions": {
+      "eventid": "3"
+    },
+    "technique_id": "T1041", 
+    "technique_name": "Exfiltration Over C2 Channel",
+    "tactic": ["Exfiltration", "Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1041/"
+  },
+  {
+    "name": "Potential Phishing Attachment Execution (Word)",
+    "conditions": {
+      "process": "winword.exe",
+      "details_contains": ".docm" 
+    },
+    "technique_id": "T1566.001",
+    "technique_name": "Phishing: Spearphishing Attachment",
+    "tactic": ["Initial Access"],
+    "url": "https://attack.mitre.org/techniques/T1566/001/"
+  },
+  {
+    "name": "Web Protocol C2/Exfil (HTTP/S) - Port 80",
+    "conditions": {
+      "eventid": "3", 
+      "details_contains": "destinationport=80" 
+    },
+    "technique_id": "T1071.001",
+    "technique_name": "Application Layer Protocol: Web Protocols",
+    "tactic": ["Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1071/001/"
+  },
+  {
+    "name": "Web Protocol C2/Exfil (HTTP/S) - Port 443",
+    "conditions": {
+      "eventid": "3", 
+      "details_contains": "destinationport=443" 
+    },
+    "technique_id": "T1071.001",
+    "technique_name": "Application Layer Protocol: Web Protocols",
+    "tactic": ["Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1071/001/"
+  },
+  {
+    "name": "Registry Run Key Modification (Sysmon Evt 13)",
+    "conditions": {
+      "eventid": "13",
+      "details_contains": "currentversion\\run" 
+    },
+    "technique_id": "T1547.001",
+    "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder",
+    "tactic": ["Persistence", "Privilege Escalation"],
+    "url": "https://attack.mitre.org/techniques/T1547/001/"
+  },
+  {
+    "name": "DNS Query (Sysmon Evt 22 - Potential C2/Exfil)",
+    "conditions": {
+      "eventid": "22"
+    },
+    "technique_id": "T1071.004",
+    "technique_name": "Application Layer Protocol: DNS",
+    "tactic": ["Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1071/004/"
+  },
+  {
+    "name": "Windows Service Creation (Evt 7045)",
+    "conditions": {
+      "eventid": "7045" 
+    },
+    "technique_id": "T1543.003",
+    "technique_name": "Create or Modify System Process: Windows Service",
+    "tactic": ["Persistence", "Privilege Escalation"],
+    "url": "https://attack.mitre.org/techniques/T1543/003/"
+  },
+  {
+    "name": "Data Destruction (sdelete)",
+    "conditions": {
+      "process": "sdelete"
+    },
+    "technique_id": "T1485",
+    "technique_name": "Data Destruction",
+    "tactic": ["Impact"],
+    "url": "https://attack.mitre.org/techniques/T1485/"
+  },
+  {
+    "name": "Potential Web Shell (w3wp spawning cmd)",
+    "conditions": {
+      "process": "cmd.exe",
+      "details_contains": "parentprocess: w3wp.exe"
+    },
+    "technique_id": "T1190",
+    "technique_name": "Exploit Public-Facing Application",
+    "tactic": ["Initial Access", "Persistence"],
+    "url": "https://attack.mitre.org/techniques/T1190/"
+  },
+  {
+    "name": "PsExec Execution",
+    "conditions": {
+      "process": "psexec.exe"
+    },
+    "technique_id": "T1021.002",
+    "technique_name": "Remote Services: SMB/Windows Admin Shares",
+    "tactic": ["Lateral Movement"],
+    "url": "https://attack.mitre.org/techniques/T1021/002/"
+  },
+  {
+    "name": "Wscript/Cscript Execution",
+    "conditions": {
+      "process": "wscript.exe"
+    },
+    "technique_id": "T1204.002",
+    "technique_name": "User Execution: Malicious File",
+    "tactic": ["Execution"],
+    "url": "https://attack.mitre.org/techniques/T1204/002/"
+  },
+  {
+    "name": "Disable Defender Real-time Monitoring (PowerShell)",
+    "conditions": {
+      "eventid": "4104",
+      "details_contains": "set-mppreference -disablerealtimemonitoring $true"
+    },
+    "technique_id": "T1562.001",
+    "technique_name": "Impair Defenses: Disable or Modify Tools",
+    "tactic": ["Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1562/001/"
+  },
+  {
+    "name": "Delete Volume Shadow Copies (vssadmin)",
+    "conditions": {
+      "process": "vssadmin.exe",
+      "details_contains": "delete shadows" 
+    },
+    "technique_id": "T1490",
+    "technique_name": "Inhibit System Recovery",
+    "tactic": ["Impact"],
+    "url": "https://attack.mitre.org/techniques/T1490/"
+  },
+  {
+    "name": "Potential Ransomware Execution",
+    "conditions": {
+      "process": "ransom.exe"
+    },
+    "technique_id": "T1486",
+    "technique_name": "Data Encrypted for Impact",
+    "tactic": ["Impact"],
+    "url": "https://attack.mitre.org/techniques/T1486/"
+  },
+  {
+    "name": "Archiving via Utility (7z)",
+    "conditions": {
+      "process": "7z.exe" 
+    },
+    "technique_id": "T1560.001",
+    "technique_name": "Archive Collected Data: Archive via Utility",
+    "tactic": ["Collection"],
+    "url": "https://attack.mitre.org/techniques/T1560/001/"
+  },
+  {
+    "name": "USB Drive Connection (PnP Event)",
+    "conditions": {
+      "eventid": "6416"
+    },
+    "technique_id": "T1052.001",
+    "technique_name": "Exfiltration Over Physical Medium: Exfiltration over USB",
+    "tactic": ["Exfiltration", "Initial Access"],
+    "url": "https://attack.mitre.org/techniques/T1052/001/"
+  },
+  {
+    "name": "MSBuild Execution",
+    "conditions": {
+      "process": "msbuild.exe" 
+    },
+    "technique_id": "T1218.006",
+    "technique_name": "Signed Binary Proxy Execution: MSBuild",
+    "tactic": ["Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1218/006/"
+  },
+  {
+    "name": "Image Load (Sysmon Evt 7 - Potential DLL Hijack)",
+    "conditions": {
+      "eventid": "7" 
+    },
+    "technique_id": "T1574.001",
+    "technique_name": "Hijack Execution Flow: DLL Search Order Hijacking",
+    "tactic": ["Persistence", "Privilege Escalation", "Defense Evasion"],
+    "url": "https://attack.mitre.org/techniques/T1574/001/"
+  },
+  {
+    "name": "ICMP Network Traffic (WFP Evt 5156)",
+    "conditions": {
+      "eventid": "5156",
+      "details_contains": "protocol=icmp" 
+    },
+    "technique_id": "T1071.001",
+    "technique_name": "Application Layer Protocol: ICMP",
+    "tactic": ["Command and Control"],
+    "url": "https://attack.mitre.org/techniques/T1071/001/"
+  }
+] 
